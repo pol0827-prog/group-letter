@@ -1,0 +1,79 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // 관리자(편집자) 이메일
+    function ownerEmail() { return 'pol0827@goedu.kr'; }
+
+    function signedIn() { return request.auth != null; }
+    function email() { return signedIn() ? request.auth.token.get('email', '') : ''; }
+    function isAdmin() {
+      return signedIn()
+        && email() != ''
+        && request.auth.token.get('email_verified', false) == true
+        && (email() == ownerEmail()
+            || exists(/databases/$(database)/documents/admins/$(email())));
+    }
+
+    // 입장 코드 확인 (코드는 secrets에만 있고, 참여자는 읽을 수 없어요)
+    function codeOk(bid, d) {
+      let p = /databases/$(database)/documents/secrets/$(bid);
+      let need = d.side == 's' ? 'studentCode' : 'teacherCode';
+      return !exists(p)
+        || get(p).data.get(need, '') == ''
+        || d.get('code', '') == get(p).data.get(need, '');
+    }
+    function boardOpen(bid) {
+      let p = /databases/$(database)/documents/boards/$(bid);
+      return exists(p) && get(p).data.get('open', true) == true;
+    }
+    function validMsg(d) {
+      return d.keys().hasOnly(['side','uid','sid','name','message','keyword','bucket','font','tone','color','ink','size','tape','sticker','photo','code','createdAt','updatedAt'])
+        && d.side in ['s', 't']
+        && d.message is string && d.message.size() > 0 && d.message.size() <= 300
+        && d.name is string && d.name.size() > 0 && d.name.size() <= 20
+        && d.sid is string && d.sid.size() > 0 && d.sid.size() <= 20
+        && d.get('keyword', '') is string && d.get('keyword', '').size() <= 12
+        && d.get('bucket', '') is string && d.get('bucket', '').size() <= 40
+        && d.get('photo', '') is string && d.get('photo', '').size() <= 400000;
+    }
+
+    // 롤링페이퍼 설정: 누구나 읽기(첫 화면 표시용), 편집자만 쓰기
+    match /boards/{bid} {
+      allow read: if true;
+      allow write: if isAdmin();
+
+      // 메시지: 본인 것만 쓰고 읽기, 편집자는 전부
+      match /msgs/{mid} {
+        allow read: if isAdmin()
+          || (signedIn() && (resource == null || resource.data.uid == request.auth.uid));
+        allow create, update: if isAdmin()
+          || (signedIn()
+              && request.resource.data.uid == request.auth.uid
+              && mid == request.resource.data.side + '_' + request.auth.uid
+              && validMsg(request.resource.data)
+              && codeOk(bid, request.resource.data)
+              && boardOpen(bid));
+        allow delete: if isAdmin()
+          || (signedIn() && resource.data.uid == request.auth.uid);
+      }
+
+      // 판 사진 모음: 편집자만
+      match /photos/{pid} {
+        allow read, write: if isAdmin();
+      }
+    }
+
+    // 입장 코드 확인용 (쓰기만 되고 읽을 수 없음)
+    match /codechecks/{uid} {
+      allow create, update: if signedIn() && request.auth.uid == uid
+        && request.resource.data.side in ['s', 't']
+        && codeOk(request.resource.data.bid, request.resource.data);
+      allow read, delete: if false;
+    }
+
+    match /secrets/{bid} { allow read, write: if isAdmin(); }
+    match /app/{docId}   { allow read: if true; allow write: if isAdmin(); }
+    match /admins/{em}   { allow read: if isAdmin() || email() == em; allow write: if isAdmin(); }
+  }
+}
