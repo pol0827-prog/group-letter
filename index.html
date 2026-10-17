@@ -727,7 +727,7 @@ const BRANCH = { army:{label:'육군', months:18, palette:'olive'}, navy:{label:
 const THEMES = {
   military:{ tsub:'선생님들이 보내는 응원', label:'입영 응원', icon:'🎖️', desc:'입영 통지서 패러디, 복무 달력 칸', doc:'입영 응원 통지서', to:'에게', sub:'몸 건강히, 마음은 단단하게 다녀와', date:'입대일',
     kw:'한 단어로 표현하면', bucketQ:'군대 있는 동안 꼭 해 봤으면 하는 것', bucketT:'복무하는 동안 꼭 해 봐', wordsT:'우리가 기억하는 {n}', extra:'복무 달력',
-    seal:c => [`${c||'우리 반'} 일동  ★  건강하게 다녀와  ★  `,'무사','귀환'],
+    seal:c => [`${c||'우리 반'}  ★  건강하게 다녀와  ★  `,'무사','귀환'],
     d:{ palette:'olive', paper:'white', pattern:'none', border:'double', titleFont:'bhs', scatter:'none', bunting:false } },
   birthday:{ tsub:'선생님들도 진심으로 축하해', label:'생일 축하', icon:'🎂', desc:'가랜드와 색종이, 주인공 사진', doc:'HAPPY BIRTHDAY', to:'의 생일을 축하해', sub:'태어나줘서 정말 고마워', date:'생일',
     kw:'올해의 너를 한 단어로', bucketQ:'올해 같이 하고 싶은 것', bucketT:'올해 같이 하자', wordsT:'친구들이 본 {n}',
@@ -739,11 +739,11 @@ const THEMES = {
     d:{ palette:'navy', paper:'white', pattern:'none', border:'double', titleFont:'song', scatter:'star', bunting:false } },
   farewell:{ tsub:'어디서든 선생님들이 응원할게', label:'새 출발·전학', icon:'✈️', desc:'어디서든 응원한다는 마음', doc:'새로운 시작을 응원해', to:'에게', sub:'어디에 있든 우리는 한 반이야', date:'떠나는 날',
     kw:'너를 한 단어로', bucketQ:'다시 만나면 하고 싶은 것', bucketT:'다시 만나면 하자', wordsT:'우리가 기억하는 {n}',
-    seal:c => ['BON VOYAGE  ★  '+(c||'우리 반')+' 일동  ★  ','늘','응원'],
+    seal:c => ['BON VOYAGE  ★  '+(c||'우리 반')+'  ★  ','늘','응원'],
     d:{ palette:'mint', paper:'mint', pattern:'dots', border:'stitch', titleFont:'yeon', scatter:'leaf', bunting:false } },
   thanks:{ tsub:'함께해서 고마웠어요', label:'감사·스승의 날', icon:'💐', desc:'하트 무늬와 꽃 장식', doc:'고맙습니다', to:'께', sub:'늘 곁에서 응원해 주셔서 감사합니다', date:'날짜',
     kw:'한 단어로 표현하면', bucketQ:'약속하고 싶은 것', bucketT:'저희가 약속할게요', wordsT:'우리가 본 {n}',
-    seal:c => ['THANK YOU  ★  '+(c||'')+' 일동  ★  ','감사','해요'],
+    seal:c => ['THANK YOU  ★  '+(c||'')+'  ★  ','감사','해요'],
     d:{ palette:'rose', paper:'pink', pattern:'hearts', border:'round', titleFont:'gamja', scatter:'flower', bunting:false } },
   exam:{ tsub:'선생님들이 끝까지 믿어', label:'수능·시험 응원', icon:'🔥', desc:'D-day 배지와 모눈 노트', doc:'시험 응원 메시지', to:'에게', sub:'지금까지 해온 너를 믿어', date:'시험일',
     kw:'응원 단어 하나', bucketQ:'시험 끝나면 같이 할 것', bucketT:'시험 끝나면 같이 하자', wordsT:'{n}에게 보내는 응원 단어', dday:true,
@@ -751,7 +751,7 @@ const THEMES = {
     d:{ palette:'lemon', paper:'lemon', pattern:'grid', border:'single', titleFont:'bhs', scatter:'star', bunting:false } },
   free:{ tsub:'선생님들이 보내는 마음', label:'자유 주제', icon:'✨', desc:'무엇이든 마음대로', doc:'롤링페이퍼', to:'에게', sub:'', date:'날짜',
     kw:'한 단어로 표현하면', bucketQ:'같이 하고 싶은 것', bucketT:'같이 하자', wordsT:'우리가 기억하는 {n}',
-    seal:c => [(c||'우리')+' 일동  ★  WITH LOVE  ★  ','늘','고마워'],
+    seal:c => [(c||'우리')+'  ★  WITH LOVE  ★  ','늘','고마워'],
     d:{ palette:'violet', paper:'lavender', pattern:'stars', border:'single', titleFont:'jua', scatter:'star', bunting:false } }
 };
 const SECTIONS = [['badge','도장·배지'],['words','한 단어 모음'],['photos','사진 모음'],['bucket','같이 하자 목록'],['teacher','선생님 한마디'],['extra','복무 달력'],['foot','맨 아래 줄']];
@@ -967,7 +967,7 @@ function partsOf(b){
       const dd = Math.round((start - today) / 86400000);
       right = `<div class="dday"><small>${esc(t.date)}까지</small><b>${dd > 0 ? 'D-' + dd : dd === 0 ? 'D-DAY' : 'D+' + (-dd)}</b><small>${fmt(start)}</small></div>`;
     } else if (!t.dday){
-      const [ring, c1, c2] = (b.theme === 'military' && b.career) ? [`${b.cls || (b.side === 'teacher' ? '선생님들' : '우리 반')} 일동  ★  늘 건강하게  ★  `,'힘찬','출발'] : t.seal(b.cls || (b.side === 'teacher' ? '선생님들' : ''));
+      const [ring, c1, c2] = (b.theme === 'military' && b.career) ? [`${b.cls || (b.side === 'teacher' ? '선생님들' : '우리 반')}  ★  늘 건강하게  ★  `,'힘찬','출발'] : t.seal(b.cls || (b.side === 'teacher' ? '선생님들' : ''));
       right = `<div class="badge">${sealSVG(ring, c1, c2, t.rosette)}</div>`;
     }
   }
@@ -979,11 +979,11 @@ function partsOf(b){
     const uinfo = unitInfoOf(b);
     const unit = (b.unit || '').trim() || br.label, unitHead = (b.unit || '').trim() ? '소속' : '군별';
     if (b.career) info = `<table class="sh-table"><tr><th>입대일</th><th>${unitHead}</th><th>보내는 곳</th></tr>
-      <tr><td>${start ? fmt(start) : '-'}</td><td>${uinfo ? `<button type="button" class="info-link" data-info>${esc(unit)}<i class="info-i"> ⓘ</i></button>` : esc(unit)}</td><td>${esc(b.cls || (b.side === 'teacher' ? '선생님들' : '우리 반'))} 일동</td></tr></table>`;
+      <tr><td>${start ? fmt(start) : '-'}</td><td>${uinfo ? `<button type="button" class="info-link" data-info>${esc(unit)}<i class="info-i"> ⓘ</i></button>` : esc(unit)}</td><td>${esc(b.cls || (b.side === 'teacher' ? '선생님들' : '우리 반'))}</td></tr></table>`;
     else info = `<table class="sh-table"><tr><th>입대일</th><th>${unitHead}</th><th>복무 기간</th><th>전역 예정일</th><th>보내는 곳</th></tr>
-      <tr><td>${start ? fmt(start) : '-'}</td><td>${uinfo ? `<button type="button" class="info-link" data-info>${esc(unit)}<i class="info-i"> ⓘ</i></button>` : esc(unit)}</td><td>${+b.months || br.months}개월</td><td>${end ? fmt(end) : '-'}</td><td>${esc(b.cls || (b.side === 'teacher' ? '선생님들' : '우리 반'))} 일동</td></tr></table>`;
+      <tr><td>${start ? fmt(start) : '-'}</td><td>${uinfo ? `<button type="button" class="info-link" data-info>${esc(unit)}<i class="info-i"> ⓘ</i></button>` : esc(unit)}</td><td>${+b.months || br.months}개월</td><td>${end ? fmt(end) : '-'}</td><td>${esc(b.cls || (b.side === 'teacher' ? '선생님들' : '우리 반'))}</td></tr></table>`;
   }
-  const pills = b.theme === 'military' ? '' : `<div class="sh-pills">${start ? `<span>${esc(t.date)} ${fmt(start)}</span>` : ''}${b.cls ? `<span>${esc(b.cls)} 일동</span>` : ''}</div>`;
+  const pills = b.theme === 'military' ? '' : `<div class="sh-pills">${start ? `<span>${esc(t.date)} ${fmt(start)}</span>` : ''}${b.cls ? `<span>${esc(b.cls)}</span>` : ''}</div>`;
 
   // 단어
   const kw = new Map();
@@ -1825,7 +1825,7 @@ onAuthStateChanged(auth, async u => {
 
 </script>
 <dialog id="info-dlg" class="info-dlg"><div class="info-body"></div><div class="actions"><button class="btn sm" type="button" id="info-close">닫기</button></div></dialog>
-<div id="app-ver" style="position:fixed;right:8px;bottom:6px;font-size:11px;color:#888;opacity:.7;z-index:9999;pointer-events:none">버전 28 · 선물 드리기</div>
+<div id="app-ver" style="position:fixed;right:8px;bottom:6px;font-size:11px;color:#888;opacity:.7;z-index:9999;pointer-events:none">버전 29 · 일동 빼기</div>
 <style>@media print{#app-ver{display:none}}</style>
 </body>
 </html>
