@@ -139,6 +139,14 @@
 .teacher .sig{ text-align:right; font-family:'Do Hyeon',sans-serif; font-size:var(--pt-tsig,.95em); color:var(--cmain); margin-top:1.6mm; }
 
 .sh-months{ display:grid; gap:1.2mm; }
+.sh-firsts{ display:grid; gap:2.2mm; font-family:'Do Hyeon',sans-serif; color:var(--main); font-size:var(--pt-route,calc(9pt*var(--hs))); }
+.sh-firsts .fm{ position:relative; border:.35mm solid var(--main); border-radius:2mm; min-height:calc(15mm*var(--hs)); padding:1.4mm 1.6mm 1.2mm; display:flex; flex-direction:column; gap:.8mm; min-width:0; background:var(--paper); }
+.sh-firsts .fm + .fm::before{ content:"›"; position:absolute; left:-1.75mm; top:50%; transform:translate(-50%,-50%); font-size:1.3em; opacity:.6; }
+.fm-no{ font-size:.85em; opacity:.55; letter-spacing:.05em; }
+.sh-firsts .fm b{ font-weight:400; font-size:1.35em; line-height:1.15; word-break:keep-all; padding-right:calc(5.5mm*var(--hs)); }
+.fm-date{ margin-top:auto; font-size:.85em; opacity:.7; white-space:nowrap; }
+.fm-stamp{ position:absolute; top:1.2mm; right:1.2mm; width:calc(5mm*var(--hs)); height:calc(5mm*var(--hs)); border:.3mm dashed var(--main); border-radius:50%; opacity:.7; }
+.fm-cap{ margin:1.6mm 0 0; font-family:'Do Hyeon',sans-serif; color:var(--main); opacity:.7; font-size:var(--pt-route,calc(9pt*var(--hs))); text-align:right; }
 .sh-route{ display:grid; grid-template-columns:1fr 1fr 6mm auto repeat(7,1fr); grid-template-rows:auto auto; gap:2mm 1.8mm; align-items:center; font-family:'Do Hyeon',sans-serif; color:var(--main); font-size:var(--pt-route,calc(9pt*var(--hs))); }
 .sh-route .rc{ position:relative; border:.35mm solid var(--main); min-height:calc(10.5mm*var(--hs)); gap:.6mm; display:flex; flex-direction:column; justify-content:space-between; padding:.9mm 1.4mm; min-width:0; }
 .sh-route .rc b{ font-weight:400; font-size:1.45em; line-height:1; opacity:.55; }
@@ -586,9 +594,10 @@ pre.eg{ background:var(--bg); border:1px solid var(--line); padding:10px 12px; b
             <div class="field" id="fld-months"><label for="c-months">복무 기간(개월)</label><input type="number" id="c-months" data-b="months" min="1" max="36"></div>
           </div>
           <div class="field" id="fld-unit"><label for="c-unit">소속 (직접 쓰기, 비우면 군별이 나와요)</label><input type="text" id="c-unit" data-b="unit" maxlength="30" placeholder="예) 대한민국 육군 특수전사령부 특전부사관"></div>
+          <div class="field" id="fld-firsts"><label for="c-firsts">첫 순간들 (한 줄에 하나씩, 10개까지)</label><textarea id="c-firsts" data-b="firsts" maxlength="400" style="min-height:150px"></textarea><div class="hint" style="display:block">비워 두면 기본 순서로 나와요. 줄을 바꿔 쓰면 칸이 하나씩 생겨요.</div></div>
           <div class="field" id="fld-unitinfo"><label for="c-unitInfo">소속 설명 (종이의 소속을 누르면 나오는 글)</label><textarea id="c-unitInfo" data-b="unitInfo" maxlength="3000" placeholder="비워 두면 소속에 '특전'이 들어갈 때 특전사·특전부사관 기본 설명이 나와요. 줄 앞에 * 를 붙이면 목록, ** 를 붙이면 안쪽 목록이 돼요."></textarea></div>
           <div class="field" id="fld-career"><label for="c-career">복무 형태</label>
-            <select id="c-career" data-b="career"><option value="">의무 복무 (전역 날짜 세기)</option><option value="1">직업 군인 (진급의 길)</option></select>
+            <select id="c-career" data-b="career"><option value="">의무 복무 (전역 날짜 세기)</option><option value="1">직업 군인 (첫 순간들)</option></select>
           </div>
           <div class="field"><label for="c-tmsg">선생님 한마디</label><textarea id="c-tmsg" data-b="tmsg" maxlength="200" placeholder="비워 두면 종이에서 빠져요."></textarea></div>
           <div class="field"><span class="lab">선생님 한마디 글씨체</span><div class="opts" id="o-tfont"></div></div>
@@ -862,8 +871,9 @@ function openInfo(){
   const dl = $('#info-dlg'); dl.querySelector('.info-body').innerHTML = mark + infoHTML(t);
   if (dl.showModal) dl.showModal(); else dl.setAttribute('open', '');
 }
+const defaultFirsts = b => /특수전|특전/.test((b && b.unit) || '') ? ['특수전학교 입교','첫 공수 강하','검은 베레모','특전하사 임관','첫 월급','첫 휴가','어머니·아버지·형께 선물 드리기'] : ['첫 입교','임관','첫 월급','첫 휴가','첫 후배'];
 const CAREER_SUB = '멋진 군인의 길, 늘 건강하게 걸어가길';
-const PT_FIXED = [['label','항목 제목 (선생님 한마디·진급의 길 위 문구 등)',12.5],['th','위쪽 정보 표의 제목 칸 (입대일·군별 등)',10],['from','쪽지 속 보낸 사람 이름',11.8],['bucket','쪽지 속 "꼭 해봤으면 하는 일"',11.5],['route','진급의 길 칸 (계급·날짜)',9],['months','복무 달력 칸',7.4],['dday','D-day 도장의 작은 글씨',10],['grp','"친구들"·"선생님" 구역 이름',15],['cont','둘째 쪽 맨 위 이름 줄',14],['foot','맨 아래 줄 (함께 씀·날짜)',9]];
+const PT_FIXED = [['label','항목 제목 (선생님 한마디·첫 순간들 위 문구 등)',12.5],['th','위쪽 정보 표의 제목 칸 (입대일·군별 등)',10],['from','쪽지 속 보낸 사람 이름',11.8],['bucket','쪽지 속 "꼭 해봤으면 하는 일"',11.5],['route','첫 순간들 칸',9],['months','복무 달력 칸',7.4],['dday','D-day 도장의 작은 글씨',10],['grp','"친구들"·"선생님" 구역 이름',15],['cont','둘째 쪽 맨 위 이름 줄',14],['foot','맨 아래 줄 (함께 씀·날짜)',9]];
 const PT_FIELDS = { docLabel:13, name:62, to:30, sub:23, cls:13, tmsg:16.5, tsig:10, msg:12.8, ...Object.fromEntries(PT_FIXED.map(([k,,d]) => [k, d])) };
 const PT_CARD = ['from','bucket'];
 function ptVars(pt){
@@ -994,14 +1004,12 @@ function partsOf(b){
     cells.push(`<div class="mo last"><span>${end ? `${end.getMonth()+1}.${end.getDate()}` : ''}</span><b>전역</b></div>`);
     extra = `<section><p class="sh-label">한 달 지날 때마다 한 칸씩 칠하기</p><div class="sh-months" style="grid-template-columns:repeat(${months+1},1fr)">${cells.join('')}</div></section>`;
   } else if (b.theme === 'military' && b.career && X.extra){
-    const cell = (r, cls = '') => `<div class="rc ${cls}"><b>${r}</b><span>__년 __월</span></div>`;
     const sf = /특수전|특전/.test(b.unit || '');
-    const fork = `<svg class="rt-fork" viewBox="0 0 10 100" preserveAspectRatio="none" aria-hidden="true"><path d="M0 50 H5 V25 H10 M5 50 V75 H10" fill="none" stroke="currentColor" stroke-width="1.2" vector-effect="non-scaling-stroke"/></svg>`;
-    extra = `<section><p class="sh-label">어느 길로 가든, 성실한 자세로 성장하는 ${esc(callName(b.name))} 되길 바란다${unitInfoOf(b) ? `<button type="button" class="info-link info-i sm" data-info>ⓘ 특전부사관이란?</button>` : ''}</p><div class="sh-route">
-      ${cell('하사','c1')}${cell('중사','c2')}${fork}
-      <p class="rt-lab r1"><b>장교의 길</b><small>간부사관 시험</small></p>${['소위','중위','대위','소령','중령','대령'].map(r => cell(r,'r1')).join('')}${cell('★ 장군','r1 top')}
-      <p class="rt-lab r2"><b>부사관의 길</b><small>부사관 트랙 유지</small></p>${['상사','원사'].map(r => cell(r,'r2')).join('')}${cell(sf ? '★ 특전사 주임원사' : '★ 주임원사','r2 top wide')}
-    </div></section>`;
+    const custom = (b.firsts || '').split('\n').map(x => x.trim()).filter(Boolean).slice(0, 10);
+    const firsts = custom.length ? custom : defaultFirsts(b);
+    extra = `<section><p class="sh-label">어떤 일을 경험하든, 성실한 자세로 모든 것에 감사할 줄 아는 행복한 ${esc(callName(b.name))} 되길 바란다${unitInfoOf(b) ? `<button type="button" class="info-link info-i sm" data-info>ⓘ 특전부사관이란?</button>` : ''}</p><div class="sh-firsts" style="grid-template-columns:repeat(${firsts.length},minmax(0,1fr))">
+      ${firsts.map((f, i) => `<div class="fm"><span class="fm-no">${String(i + 1).padStart(2, '0')}</span><b>${esc(f)}</b><span class="fm-date">__년 __월 __일</span><i class="fm-stamp" aria-hidden="true"></i></div>`).join('')}
+    </div><p class="fm-cap">해낸 순간마다 동그라미에 도장을 찍거나 칠해 보세요</p></section>`;
   }
 
   const head = `${D.bunting ? buntingSVG(b) : ''}
@@ -1171,7 +1179,7 @@ function renderDesign(){
   g('frame').innerHTML = optButtons(FRAMES, D.frame, 'data-d="frame" data-v');
   g('tilt').innerHTML = optButtons([['true','삐뚤빼뚤'],['false','반듯하게']], String(!!D.tilt), 'data-d="tilt" data-v');
   g('cols').innerHTML = optButtons([['auto','자동'],['2','2줄'],['3','3줄'],['4','4줄'],['5','5줄'],['6','6줄']], String(D.cols), 'data-d="cols" data-v');
-  $('#sec-toggles').innerHTML = SECTIONS.filter(([k]) => k !== 'extra' || b.theme === 'military').map(([k,l]) => `<label class="toggle"><input type="checkbox" data-sec="${k}" ${b.sections[k] ? 'checked' : ''}>${esc(k === 'extra' && b.career ? '진급의 길' : l)}</label>`).join('');
+  $('#sec-toggles').innerHTML = SECTIONS.filter(([k]) => k !== 'extra' || b.theme === 'military').map(([k,l]) => `<label class="toggle"><input type="checkbox" data-sec="${k}" ${b.sections[k] ? 'checked' : ''}>${esc(k === 'extra' && b.career ? '첫 순간들' : l)}</label>`).join('');
   if (S.tab === 'design') renderSheet($('#pages2'));
 }
 
@@ -1412,6 +1420,8 @@ function fillContent(){
   $('#fld-career').hidden = b.theme !== 'military';
   $('#fld-unit').hidden = b.theme !== 'military';
   $('#fld-unitinfo').hidden = b.theme !== 'military';
+  $('#fld-firsts').hidden = !(b.theme === 'military' && b.career);
+  $('#c-firsts').placeholder = defaultFirsts(b).join('\n');
   $('#fld-months').hidden = !!b.career;
   $$('#pane-content [data-b]').forEach(el => { if (el !== document.activeElement) el.value = b[el.dataset.b] ?? ''; });
   const tfo = FONTS.find(x => x[0] === b.design.tfont) || FONTS[0];
@@ -1691,7 +1701,7 @@ $$('#pane-content [data-b]').forEach(el => el.addEventListener('input', () => {
   const k = el.dataset.b; let v = el.value;
   if (k === 'months') v = Math.max(1, Math.min(36, parseInt(v,10) || 18));
   if (k === 'career'){
-    $('#fld-months').hidden = !v;
+    $('#fld-months').hidden = !v; $('#fld-firsts').hidden = !v;
     const raw = S.boards[S.bid], a = THEMES.military.sub;
     if (v && (!raw.sub || raw.sub === a)) S.boards[S.bid] = { ...raw, sub:CAREER_SUB };
     else if (!v && raw.sub === CAREER_SUB) S.boards[S.bid] = { ...raw, sub:a };
@@ -1815,7 +1825,7 @@ onAuthStateChanged(auth, async u => {
 
 </script>
 <dialog id="info-dlg" class="info-dlg"><div class="info-body"></div><div class="actions"><button class="btn sm" type="button" id="info-close">닫기</button></div></dialog>
-<div id="app-ver" style="position:fixed;right:8px;bottom:6px;font-size:11px;color:#888;opacity:.7;z-index:9999;pointer-events:none">버전 25 · 영상 버튼 디자인</div>
+<div id="app-ver" style="position:fixed;right:8px;bottom:6px;font-size:11px;color:#888;opacity:.7;z-index:9999;pointer-events:none">버전 28 · 선물 드리기</div>
 <style>@media print{#app-ver{display:none}}</style>
 </body>
 </html>
