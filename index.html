@@ -499,7 +499,7 @@ pre.eg{ background:var(--bg); border:1px solid var(--line); padding:10px 12px; b
       <div class="panel" id="giftpanel">
         <h2 class="group-title">받는 사람용 링크</h2>
         <p style="margin:0 0 10px;color:var(--muted);font-size:15px">완성된 롤링페이퍼를 받는 사람이 휴대폰이나 컴퓨터로 볼 수 있는 링크예요. 버튼을 누른 순간의 모습이 저장돼요. 메시지를 더 받거나 꾸미기를 바꾼 뒤에는 "다시 저장"을 눌러야 링크에도 반영돼요. 링크 주소는 그대로예요. 링크를 아는 사람은 누구나 볼 수 있으니 받는 사람에게만 보내 주세요.</p>
-        <div class="actions"><button class="btn sm" type="button" id="gift-make">받는 사람용 링크 만들기</button></div>
+        <div class="actions"><button class="btn sm" type="button" id="gift-make">받는 사람용 링크 만들기</button><button class="btn sm ghost" type="button" id="gift-renew" hidden>링크 주소 새로 바꾸기</button></div>
         <div class="copyrow" id="gift-row" hidden style="margin-top:10px"><input type="text" id="gift-url" readonly><button class="btn sm" type="button" id="gift-copy">복사</button></div>
         <div class="actions" id="gift-open-row" hidden><a class="btn sm ghost" id="gift-open" target="_blank" rel="noopener">받는 사람 화면 열어 보기</a></div>
         <p class="status" id="gift-mstatus"></p>
@@ -1452,14 +1452,17 @@ function renderGiftPanel(){
   const gid = raw.giftId, has = !!gid;
   $('#gift-make').textContent = has ? '받는 사람용 링크 다시 저장' : '받는 사람용 링크 만들기';
   $('#gift-row').hidden = !has; $('#gift-open-row').hidden = !has;
+  $('#gift-renew').hidden = !has;
   if (has){ $('#gift-url').value = giftUrl(gid); $('#gift-open').href = giftUrl(gid); }
 }
-async function makeGift(){
+async function makeGift(renew){
   const id = S.bid, raw = S.boards[id]; if (!id || !raw) return;
-  const btn = $('#gift-make'); btn.disabled = true;
+  const oldGid = renew === true ? raw.giftId : '';
+  if (oldGid && !confirm('받는 사람용 링크 주소를 새로 바꿀까요?\n\n이미 보낸 예전 링크는 바로 열리지 않게 돼요. 새 링크를 받는 사람에게 다시 보내 주세요.')) return;
+  const btn = $('#gift-make'), btn2 = $('#gift-renew'); btn.disabled = true; btn2.disabled = true;
   status('#gift-mstatus', '저장하는 중… 사진이 많으면 조금 걸려요.');
   try {
-    const gid = raw.giftId || ('g' + Math.random().toString(36).slice(2,10) + Date.now().toString(36) + Math.random().toString(36).slice(2,8));
+    const gid = (!oldGid && raw.giftId) || ('g' + Math.random().toString(36).slice(2,10) + Date.now().toString(36) + Math.random().toString(36).slice(2,8));
     const keep = S.msgs.filter(m => (m.message||'').trim()).map(m => { const { _id, uid, code, ...rest } = m; return [_id, rest]; });
     const photoIds = Object.keys(S.photoData);
     await setDoc(doc(db, 'gifts', gid), { bid:id, board:{ ...raw, giftId:gid }, at:Date.now() });
@@ -1473,14 +1476,23 @@ async function makeGift(){
     const oldP = await getDocs(collection(db, 'gifts', gid, 'photos'));
     oldP.docs.filter(d => !(d.id in S.photoData)).forEach(d => jobs.push(() => deleteDoc(d.ref)));
     for (let i = 0; i < jobs.length; i += 8){ await Promise.all(jobs.slice(i, i + 8).map(f => f())); status('#gift-mstatus', `저장하는 중… ${Math.min(i + 8, jobs.length)} / ${jobs.length}`); }
-    if (!raw.giftId) patchRoot({ giftId:gid }, '#gift-mstatus');
+    if (!raw.giftId || oldGid) patchRoot({ giftId:gid }, '#gift-mstatus');
     S.boards[id] = { ...S.boards[id], giftId:gid };
     renderGiftPanel();
-    status('#gift-mstatus', `저장했어요. 메시지 ${keep.length}통이 링크에 담겼어요.`);
+    if (oldGid){
+      let delFail = false;
+      try {
+        for (const sub of ['msgs','photos']){ const ds = await getDocs(collection(db, 'gifts', oldGid, sub)); for (const d of ds.docs) await deleteDoc(d.ref); }
+        await deleteDoc(doc(db, 'gifts', oldGid));
+      } catch(e){ console.error(e); delFail = true; }
+      status('#gift-mstatus', delFail ? '새 링크는 만들었지만 예전 링크를 지우지 못했어요. Firebase 보안 규칙의 "gifts" 부분을 확인해 주세요.' : `새 주소로 바꿨어요. 예전 링크는 더 이상 열리지 않아요. 위 링크를 복사해서 다시 보내 주세요. (메시지 ${keep.length}통)`, delFail);
+    } else {
+      status('#gift-mstatus', `저장했어요. 메시지 ${keep.length}통이 링크에 담겼어요.`);
+    }
   } catch(e){
     console.error(e);
     status('#gift-mstatus', '저장하지 못했어요. Firebase 보안 규칙에 "gifts" 부분을 추가했는지 확인해 주세요.', true);
-  } finally { btn.disabled = false; }
+  } finally { btn.disabled = false; btn2.disabled = false; }
 }
 async function startGift(gid){
   show('gift'); status('#gift-status', '불러오는 중…');
@@ -1737,7 +1749,8 @@ $('#go-new').addEventListener('click', () => setTab('new'));
 $('#publish-btn').addEventListener('click', () => publish(true));
 $('#live-btn').addEventListener('click', () => setTab('share'));
 $('#make-live').addEventListener('click', async () => { try { await setDoc(doc(db, 'app', 'state'), { active:S.bid }); } catch(e){ banner('바꾸지 못했어요.', true); } });
-$('#gift-make').addEventListener('click', makeGift);
+$('#gift-make').addEventListener('click', () => makeGift(false));
+$('#gift-renew').addEventListener('click', () => makeGift(true));
 $('#gift-copy').addEventListener('click', async () => { try { await navigator.clipboard.writeText($('#gift-url').value); status('#gift-mstatus', '링크를 복사했어요.'); } catch(_){ $('#gift-url').select(); } });
 $('#copy-url').addEventListener('click', async () => { try { await navigator.clipboard.writeText($('#share-url').value); status('#codes-status', '링크를 복사했어요.'); } catch(_){ $('#share-url').select(); } });
 $('#save-codes').addEventListener('click', async () => {
